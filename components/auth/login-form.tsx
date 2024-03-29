@@ -1,12 +1,12 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useState, useTransition } from "react";
 import CardWrapper from "./card-wrapper";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useSearchParams } from "next/navigation";
 import { LoginSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition } from "react";
 import {
   Form,
   FormControl,
@@ -25,6 +25,12 @@ import { login } from "@/actions/login";
 interface LoginFormProps {}
 
 const LoginForm: FC<LoginFormProps> = ({}) => {
+  const searchParams = useSearchParams();
+  const urlError =
+    searchParams.get("error") === "OAuthAccountNotLinked"
+      ? "Email is already in use with different provider"
+      : "";
+
   const [visible, setVisible] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>("");
@@ -45,8 +51,8 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
     startTransition(() => {
       login(values) // server side console log (check terminal)
         .then((data) => {
-          setError(data.error);
-          setSuccess(data.success);
+          setError(data?.error);
+          // setSuccess(data?.success);
         });
     });
 
@@ -112,7 +118,7 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
               )}
             />
           </div>
-          <FormError message={error} />
+          <FormError message={error || urlError} />
           <FormSuccess message={success} />
           <Button className="w-full" type="submit" disabled={isPending}>
             Login
