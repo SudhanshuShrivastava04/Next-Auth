@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { LoginSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTransition } from "react";
 import {
   Form,
   FormControl,
@@ -19,11 +20,15 @@ import { Button } from "../ui/button";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import FormError from "../form-error";
 import FormSuccess from "../form-success";
+import { login } from "@/actions/login";
 
 interface LoginFormProps {}
 
 const LoginForm: FC<LoginFormProps> = ({}) => {
   const [visible, setVisible] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | undefined>("");
+  const [success, setSuccess] = useState<string | undefined>("");
 
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
@@ -34,7 +39,18 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
   });
 
   const onSubmit = (values: z.infer<typeof LoginSchema>) => {
-    console.log("Submitted : ", values);
+    setError("");
+    setSuccess("");
+
+    startTransition(() => {
+      login(values) // server side console log (check terminal)
+        .then((data) => {
+          setError(data.error);
+          setSuccess(data.success);
+        });
+    });
+
+    console.log("Submitted : ", values); // client side console log
   };
 
   return (
@@ -56,6 +72,7 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
                   <FormControl>
                     <Input
                       {...field}
+                      disabled={isPending}
                       placeholder="john.doe@emaxple.com"
                       type="email"
                     />
@@ -75,12 +92,14 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
                     <div className="w-full flex space-x-2">
                       <Input
                         {...field}
+                        disabled={isPending}
                         placeholder="******"
                         type={visible ? "text" : "password"}
                       />
 
                       <Button
                         variant="outline"
+                        disabled={isPending}
                         type="button"
                         onClick={() => setVisible((prev) => !prev)}
                       >
@@ -93,9 +112,9 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
               )}
             />
           </div>
-          <FormError message="Something went wrong!" />
-          <FormSuccess message="Email sent!" />
-          <Button className="w-full" type="submit">
+          <FormError message={error} />
+          <FormSuccess message={success} />
+          <Button className="w-full" type="submit" disabled={isPending}>
             Login
           </Button>
         </form>
