@@ -52,7 +52,7 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
       login(values) // server side console log (check terminal)
         .then((data) => {
           setError(data?.error);
-          // setSuccess(data?.success);
+          setSuccess(data?.success);
         });
     });
 
