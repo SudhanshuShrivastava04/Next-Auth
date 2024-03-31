@@ -3,9 +3,9 @@
 import { FC, useState, useTransition } from "react";
 import CardWrapper from "./card-wrapper";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { useSearchParams } from "next/navigation";
-import { LoginSchema } from "@/schemas";
+import { z } from "zod";
+import { NewPasswordSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -17,84 +17,59 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import FormError from "../form-error";
 import FormSuccess from "../form-success";
-import { login } from "@/actions/login";
-import Link from "next/link";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { newPassword } from "@/actions/new-password";
 
-interface LoginFormProps {}
+interface NewPasswordFormProps {}
 
-const LoginForm: FC<LoginFormProps> = ({}) => {
+const NewPasswordForm: FC<NewPasswordFormProps> = ({}) => {
   const searchParams = useSearchParams();
-  const urlError =
-    searchParams.get("error") === "OAuthAccountNotLinked"
-      ? "Email is already in use with different provider"
-      : "";
+  const token = searchParams.get("token")
 
   const [visible, setVisible] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
 
-  const form = useForm<z.infer<typeof LoginSchema>>({
-    resolver: zodResolver(LoginSchema),
+  const form = useForm<z.infer<typeof NewPasswordSchema>>({
+    resolver: zodResolver(NewPasswordSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      newPassword: "",
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = (values: z.infer<typeof LoginSchema>) => {
+  const onSubmit = (values: z.infer<typeof NewPasswordSchema>) => {
     setError("");
     setSuccess("");
 
     startTransition(() => {
-      login(values) // server side console log (check terminal)
-        .then((data) => {
-          setError(data?.error);
-          setSuccess(data?.success);
-        });
+      newPassword(values, token).then((data) => {
+        setError(data?.error);
+        setSuccess(data?.success);
+      });
     });
 
-    console.log("Submitted : ", values); // client side console log
+    console.log("Submitted : ", values);
   };
 
   return (
     <CardWrapper
-      headerLabel={"Welcome Back"}
-      backbuttonLabel={"Don't have an account?"}
-      backButtonhref={"/auth/register"}
-      showSocial
+      headerLabel={"Forgot Password?"}
+      backbuttonLabel={"Back to login"}
+      backButtonhref={"/auth/login"}
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
             <FormField
               control={form.control}
-              name="email"
+              name="newPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder="john.doe@example.com"
-                      type="email"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>New Password</FormLabel>
                   <FormControl>
                     <div className="w-full flex space-x-2">
                       <Input
@@ -114,22 +89,44 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
                       </Button>
                     </div>
                   </FormControl>
-                  <Button
-                    size="sm"
-                    variant="link"
-                    className="px-0 font-normal"
-                  >
-                    <Link href="/auth/reset">Forgot password?</Link>
-                  </Button>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <div className="w-full flex space-x-2">
+                      <Input
+                        {...field}
+                        disabled={isPending}
+                        placeholder="******"
+                        type={visible ? "text" : "password"}
+                      />
+
+                      <Button
+                        variant="outline"
+                        disabled={isPending}
+                        type="button"
+                        onClick={() => setVisible((prev) => !prev)}
+                      >
+                        {visible ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+                      </Button>
+                    </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-          <FormError message={error || urlError} />
+          <FormError message={error} />
           <FormSuccess message={success} />
           <Button className="w-full" type="submit" disabled={isPending}>
-            Login
+            Reset Password
           </Button>
         </form>
       </Form>
@@ -137,4 +134,4 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
   );
 };
 
-export default LoginForm;
+export default NewPasswordForm;
