@@ -2,24 +2,21 @@
 
 import { logout } from "@/actions/logout";
 import { Button } from "@/components/ui/button";
-import { useSession } from "next-auth/react";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { FC } from "react";
 
 interface SettingsPageProps {}
 
 const SettingsPage: FC<SettingsPageProps> = ({}) => {
-  const session = useSession();
+  const user = useCurrentUser();
   const onClick = () => {
     logout();
   };
   return (
-    <div>
-      {JSON.stringify(session)}
-      <form>
-        <Button onClick={onClick} type="submit">
-          Sign Out
-        </Button>
-      </form>
+    <div className="bg-white p-10 rounded-xl">
+      <Button onClick={onClick} type="submit">
+        Sign Out
+      </Button>
     </div>
   );
 };
