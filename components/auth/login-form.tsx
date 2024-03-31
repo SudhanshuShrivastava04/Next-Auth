@@ -15,6 +15,12 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
@@ -32,6 +38,7 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
       ? "Email is already in use with different provider"
       : "";
 
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
   const [visible, setVisible] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>("");
@@ -52,9 +59,21 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
     startTransition(() => {
       login(values) // server side console log (check terminal)
         .then((data) => {
-          setError(data?.error);
-          setSuccess(data?.success);
-        });
+          if (data?.error) {
+            form.reset();
+            setError(data.error);
+          }
+
+          if (data?.success) {
+            form.reset();
+            setSuccess(data.success);
+          }
+
+          if (data?.twoFactor) {
+            setShowTwoFactor(true);
+          }
+        })
+        .catch(() => setError("Something went wrong!"));
     });
 
     console.log("Submitted : ", values); // client side console log
@@ -70,66 +89,106 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder="john.doe@example.com"
-                      type="email"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <div className="w-full flex space-x-2">
-                      <Input
-                        {...field}
+            {showTwoFactor && (
+              <FormField
+                control={form.control}
+                name="code"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col items-center justify-center space-y-4">
+                    <FormLabel>Two-Factor Authentication Code</FormLabel>
+                    <FormControl>
+                      <InputOTP
+                        maxLength={6}
+                        value={field.value}
+                        onChange={field.onChange}
                         disabled={isPending}
-                        placeholder="******"
-                        type={visible ? "text" : "password"}
-                      />
-
-                      <Button
-                        variant="outline"
-                        disabled={isPending}
-                        type="button"
-                        onClick={() => setVisible((prev) => !prev)}
                       >
-                        {visible ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            {!showTwoFactor && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          placeholder="john.doe@example.com"
+                          type="email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <div className="w-full flex space-x-2">
+                          <Input
+                            {...field}
+                            disabled={isPending}
+                            placeholder="******"
+                            type={visible ? "text" : "password"}
+                          />
+
+                          <Button
+                            variant="outline"
+                            disabled={isPending}
+                            type="button"
+                            onClick={() => setVisible((prev) => !prev)}
+                          >
+                            {visible ? (
+                              <AiOutlineEye />
+                            ) : (
+                              <AiOutlineEyeInvisible />
+                            )}
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <Button
+                        size="sm"
+                        variant="link"
+                        className="px-0 font-normal"
+                      >
+                        <Link href="/auth/reset">Forgot password?</Link>
                       </Button>
-                    </div>
-                  </FormControl>
-                  <Button
-                    size="sm"
-                    variant="link"
-                    className="px-0 font-normal"
-                  >
-                    <Link href="/auth/reset">Forgot password?</Link>
-                  </Button>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
           </div>
           <FormError message={error || urlError} />
           <FormSuccess message={success} />
           <Button className="w-full" type="submit" disabled={isPending}>
-            Login
+            {showTwoFactor ? "Confirm" : "Login"}
           </Button>
         </form>
       </Form>
