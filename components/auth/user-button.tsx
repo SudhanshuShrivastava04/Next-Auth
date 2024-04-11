@@ -12,8 +12,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { FaUser } from "react-icons/fa";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import LoginButton from "./login-button";
 import { ExitIcon } from "@radix-ui/react-icons";
+import LogoutButton from "./logout-button";
 
 interface UserButtonProps {}
 
@@ -30,12 +30,12 @@ const UserButton: FC<UserButtonProps> = ({}) => {
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-40" align="end">
-        <LoginButton>
+        <LogoutButton>
           <DropdownMenuItem>
             <ExitIcon className="w-4 h-4 mr-2" />
             Logout
           </DropdownMenuItem>
-        </LoginButton>
+        </LogoutButton>
       </DropdownMenuContent>
     </DropdownMenu>
   );
