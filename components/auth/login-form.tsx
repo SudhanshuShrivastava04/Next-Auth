@@ -33,6 +33,7 @@ interface LoginFormProps {}
 
 const LoginForm: FC<LoginFormProps> = ({}) => {
   const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
   const urlError =
     searchParams.get("error") === "OAuthAccountNotLinked"
       ? "Email is already in use with different provider"
@@ -81,7 +82,7 @@ const LoginForm: FC<LoginFormProps> = ({}) => {
     setSuccess("");
 
     startTransition(() => {
-      login(values) // server side console log (check terminal)
+      login(values, callbackUrl) // server side console log (check terminal)
         .then((data) => {
           if (data?.error) {
             form.reset();

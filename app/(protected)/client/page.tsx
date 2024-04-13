@@ -8,7 +8,7 @@ interface ClientPageProps {}
 
 const ClientPage: FC<ClientPageProps> = ({}) => {
   const user = useCurrentUser();
-  return <UserInfo label="Client component" user={user} />;
+  return <UserInfo label="Client Side Rendering" user={user} />;
 };
 
 export default ClientPage;
